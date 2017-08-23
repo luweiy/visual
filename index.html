@@ -21,11 +21,11 @@ function getParameterByName(name, url) {
 if (getParameterByName('id')) {
   width = getParameterByName('width') ?  getParameterByName('width') : 1200;
   height = getParameterByName('height') ?  getParameterByName('height') : 900;
-  url = 'http://localhost:9011/api/single?id=' + getParameterByName('id');
+  url = 'http://' + window.location.hostname + ':9011/api/single?id=' + getParameterByName('id');
 } else {
   width = 1500;
   height = 30000;
-  url = 'http://localhost:9011/api/full';
+  url = 'http://' + window.location.hostname + ':9011/api/full';
 }
 
 var svg = d3.select("svg").attr("width", width).attr("height",height).classed("svg-content-responsive", true),
