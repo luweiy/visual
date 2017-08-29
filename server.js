@@ -9,6 +9,9 @@ var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var request    = require('request');
 
+const NodeCache = require( "node-cache" );
+const myCache = new NodeCache( { stdTTL: 0, checkperiod: 0 } );
+
 // configure app to use bodyParser()
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,90 +43,102 @@ var port = process.env.PORT || 8080;        // set our port
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
 
+var raw;
+var self = this;
+request("http://visualenergytech.com:9200/logstash-wanjiang/_search?&size=20000", function (error, response, body) {
+  self.raw = JSON.parse(body);
+});
+
 // accessed at GET http://localhost:8080/api
 router.get('/single', function(req, res) {
   var id = req.query.id ? req.query.id : "8979279";
-  request("http://visualenergytech.com:9200/logstash-wanjiang/_search?&size=20000", function (error, response, body) {
-    var raw = JSON.parse(body);
+  
+  value = myCache.get(id);
+  if (value) {
+    console.log("load from cache");
+    return res.json(value)
+  }
+  
+  var raw = self.raw
 
-    var energy = {
-      "nodes":[],
-      "links":[]
-    };
+  var energy = {
+    "nodes":[],
+    "links":[]
+  };
 
-    var energy_2 = {
-      "nodes":[],
-      "links":[]
-    };
+  var energy_2 = {
+    "nodes":[],
+    "links":[]
+  };
 
-    for (var i = 0; i < raw.hits.hits.length; i++) {
-      energy.nodes.push({"id": raw.hits.hits[i]._source.ID, "name": raw.hits.hits[i]._source.DEVICE_TYPE + "(" + raw.hits.hits[i]._source.ID + ")", "node1_id": raw.hits.hits[i]._source.NODE1_ID, "node2_id": raw.hits.hits[i]._source.NODE2_ID});
-      //console.log(raw.hits.hits[i]._source.DEVICE_TYPE);
-    }
+  for (var i = 0; i < raw.hits.hits.length; i++) {
+    energy.nodes.push({"id": raw.hits.hits[i]._source.ID, "type": raw.hits.hits[i]._source.DEVICE_TYPE, "name": raw.hits.hits[i]._source.DEVICE_TYPE + "(" + raw.hits.hits[i]._source.ID + ")", "node1_id": raw.hits.hits[i]._source.NODE1_ID, "node2_id": raw.hits.hits[i]._source.NODE2_ID});
+    //console.log(raw.hits.hits[i]._source.DEVICE_TYPE);
+  }
 
-    //calculate links
-    function cal(from_index, to_id, callback) {
-      //console.log(from_index + ' : ' + to_id)
+  //calculate links
+  function cal(from_index, to_id, callback) {
 
-      // in the middle of list, one equitment can be node1_id = node2_id
-      for (var i = 0; i < energy.nodes.length; i++) {
-        if (energy.nodes[i].node1_id === to_id && energy.nodes[i].node2_id === to_id) {
-          energy_2.nodes.push(energy.nodes[i]);
-          energy.nodes.splice(i, 1);
-          energy_2.links.push({"source": from_index, "target": energy_2.nodes.length-1, "value": 1});
-          from_index = energy_2.nodes.length-1;
-          break;
-        }
-      }
-      
-      
-      for (var i = 0; i < energy.nodes.length; i++) {
-        if (energy.nodes[i].node1_id === to_id) {
-          //don't count some unneccensary items
-          if (energy.nodes[i].name.match("站房引线|站房电缆头|站房接地刀闸|10kV电缆")) {
-            if (energy.nodes[i].node2_id != '0') {
-              callback(from_index, energy.nodes[i].node2_id, callback);
-            }
-            continue;
-          }
-          
-          //add node
-          var flag = false;
-          for (var j = 0; j < energy_2.nodes.length; j++) {
-            if (energy_2.nodes[j] === energy.nodes[i]) {
-              flag = true;
-              break;
-            }
-          }
-          if (!flag) {
-            energy_2.nodes.push(energy.nodes[i]);
-            j = energy_2.nodes.length - 1;
-          }
-    
-          //add link
-          energy_2.links.push({"source": from_index, "target": j, "value": 1});
-      
-          //continue on next node
-          if (energy_2.nodes[j].node2_id != '0') {
-            callback(j, energy_2.nodes[j].node2_id, callback);
-          }
-        }
-      }
-    }
-
-    // find the begining node
+    // in the middle of list, one equitment can be node1_id = node2_id
     for (var i = 0; i < energy.nodes.length; i++) {
-      if (energy.nodes[i].node1_id === id && energy.nodes[i].node2_id === id) {
+      if (energy.nodes[i].node1_id === to_id && energy.nodes[i].node2_id === to_id) {
         energy_2.nodes.push(energy.nodes[i]);
         energy.nodes.splice(i, 1);
+        energy_2.links.push({"source": from_index, "target": energy_2.nodes.length-1, "value": 1});
+        from_index = energy_2.nodes.length-1;
         break;
       }
     }
-    cal(0, id, cal);
+    
+    
+    for (var i = 0; i < energy.nodes.length; i++) {
+      if (energy.nodes[i].node1_id === to_id) {
+        //don't count some unneccensary items
+        if (energy.nodes[i].name.match("站房引线|站房电缆头|站房接地刀闸|10kV电缆")) {
+          if (energy.nodes[i].node2_id != '0') {
+            callback(from_index, energy.nodes[i].node2_id, callback);
+          }
+          continue;
+        }
+        
+        //add node
+        var flag = false;
+        for (var j = 0; j < energy_2.nodes.length; j++) {
+          if (energy_2.nodes[j] === energy.nodes[i]) {
+            flag = true;
+            break;
+          }
+        }
+        if (!flag) {
+          energy_2.nodes.push(energy.nodes[i]);
+          j = energy_2.nodes.length - 1;
+        }
+  
+        //add link
+        energy_2.links.push({"source": from_index, "target": j, "value": 1});
+    
+        //continue on next node
+        if (energy_2.nodes[j].node2_id != '0') {
+          callback(j, energy_2.nodes[j].node2_id, callback);
+        }
+      }
+    }
+  }
 
-    console.log(JSON.stringify(energy_2));
-    res.json(energy_2);
-  });
+  // find the begining node
+  for (var i = 0; i < energy.nodes.length; i++) {
+    if (energy.nodes[i].node1_id === id && energy.nodes[i].node2_id === id) {
+      energy_2.nodes.push(energy.nodes[i]);
+      energy.nodes.splice(i, 1);
+      break;
+    }
+  }
+  cal(0, id, cal);
+
+  console.log(JSON.stringify(energy_2));
+  myCache.set(id, energy_2);
+
+  res.json(energy_2);
 });
 
 router.get('/full', function(req, res) {

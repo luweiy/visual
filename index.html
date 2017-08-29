@@ -1,121 +1,236 @@
 <!DOCTYPE html>
-<svg width="960" height="500"></svg>
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="https://unpkg.com/d3-sankey@0.6"></script>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
 
-<script>
-  
-</script>
-  
-<script>
-function getParameterByName(name, url) {
-  if (!url) url = window.location.href;
-  name = name.replace(/[\[\]]/g, "\\$&");
-  var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-      results = regex.exec(url);
-  if (!results) return null;
-  if (!results[2]) return '';
-  return decodeURIComponent(results[2].replace(/\+/g, " "));
-}
+    <title>Dashboard Template for Bootstrap</title>
 
-if (getParameterByName('id')) {
-  width = getParameterByName('width') ?  getParameterByName('width') : 1200;
-  height = getParameterByName('height') ?  getParameterByName('height') : 900;
-  url = 'http://' + window.location.hostname + ':9011/api/single?id=' + getParameterByName('id');
-} else {
-  width = 1500;
-  height = 30000;
-  url = 'http://' + window.location.hostname + ':9011/api/full';
-}
+    <!-- Bootstrap core CSS -->
+    <link href="../../dist/css/bootstrap.min.css" rel="stylesheet">
 
-var svg = d3.select("svg").attr("width", width).attr("height",height).classed("svg-content-responsive", true),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
-    
-var formatNumber = d3.format(",.0f"),
-    format = function(d) { return formatNumber(d) + " TWh"; },
-    color = d3.scaleOrdinal(d3.schemeCategory10);
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+  </head>
 
-var sankey = d3.sankey()
-    .nodeWidth(15)
-    .nodePadding(10)
-    .extent([[1, 1], [width - 1, height - 6]]);
+  <body>
+    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+      <button class="navbar-toggler navbar-toggler-right hidden-lg-up" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand" href="#">Dashboard</a>
 
-var link = svg.append("g")
-    .attr("class", "links")
-    .attr("fill", "none")
-    .attr("stroke", "#000")
-    .attr("stroke-opacity", 0.2)
-  .selectAll("path");
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Settings</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Help</a>
+          </li>
+        </ul>
+        <form class="form-inline mt-2 mt-md-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
 
-var node = svg.append("g")
-    .attr("class", "nodes")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 10)
-  .selectAll("g");
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="col-sm-3 col-md-2 hidden-xs-down bg-faded sidebar">
+          <h4>望牛墩供电分局</h4>
+          <ul class="nav nav-pills flex-column nav-tabs">  
+            <li class="nav-item active">
+              <a data-toggle="tab" class="nav-link" href="#f10">万江F10广场线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f18">万江F18望牛墩线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f24">万江F24建银线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f32">万江F32上合线</a>
+            </li>
+            
+            <br>
+            <h4>万江供电分局</h4>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f11">万江F11新村线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f12">万江F12大汾线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f16">万江F16基头线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f17">万江F17华兴线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f19">万江F19滘联线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f1">万江F1大涌尾线</a>
+            </li>
 
-d3.json(url, function(error, energy) {
-  if (error) throw error;
-  
-  /*
-  energy = {
-  	"nodes": [{
-    		"name": "Agricultural 'waste'"
-    	}, {
-    		"name": "Bio-conversion"
-    	}, {
-    		"name": "Liquid"
-    	}, {
-    		"name": "Losses"
-    	}, {
-    		"name": "Solid"
-  	  }
-    ],
-    "links":[
-        {
-  		    "source": 0,
-  		    "target": 1,
-          "value": 1
-        }
-      ]
-    };
-  */
-  
-  sankey(energy);
+            <br>
+            <h4>中堂供电分局</h4>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f13">万江F13东坊线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f15">万江F15竞业线</a>
+            </li>
+            <li class="nav-item">
+              <a data-toggle="tab" class="nav-link" href="#f4">万江F4永安线</a>
+            </li>
+          </ul>
+        </nav>
 
-  link = link
-    .data(energy.links)
-    .enter().append("path")
-      .attr("d", d3.sankeyLinkHorizontal())
-      .attr("stroke-width", function(d) { return Math.max(1, d.width); });
+        <main class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 pt-3">
+          <h1>Dashboard</h1>
 
-  link.append("title")
-      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); });
+          <div class="tab-content">
+            <div id="f1" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8495365" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8495227" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7999815" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8001650" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8001536" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8496444" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8001466" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+            
+            <div id="f10" class="tab-pane fade in active">
+              <iframe src="/iframe.html?width=1200&height=600&id=8206468" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8979279" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+        
+            <div id="f11" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8529870" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+            
+            <div id="f12" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8538009" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8538430" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
 
-  node = node
-    .data(energy.nodes)
-    .enter().append("g");
+            <div id="f13" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8028341" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8000020" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8028401" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8028320" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8028448" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
 
-  node.append("rect")
-      .attr("x", function(d) { return d.x0; })
-      .attr("y", function(d) { return d.y0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("fill", function(d) { return color(d.name.replace(/ .*/, "")); })
-      .attr("stroke", "#000");
+            <div id="f15" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8065063" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=10782863" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8997934" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7843209" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8063865" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
 
-  node.append("text")
-      .attr("x", function(d) { return d.x0 - 6; })
-      .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
-      .attr("dy", "0.35em")
-      .attr("text-anchor", "end")
-      .text(function(d) { return d.name; })
-    .filter(function(d) { return d.x0 < width / 2; })
-      .attr("x", function(d) { return d.x1 + 6; })
-      .attr("text-anchor", "start");
+            <div id="f16" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8541400" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8541711" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8541021" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=10512648" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8541813" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
 
-  node.append("title")
-      .text(function(d) { return d.name + "\n" + format(d.value); });
-});
+            <div id="f17" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8547988" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8548209" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8549265" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8547620" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8547157" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8546893" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8546733" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8548390" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8547229" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
 
-</script>
+            <div id="f18" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=11652735" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8148652" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8148899" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8148860" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7878496" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7888193" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=11530805" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=11695862" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8149239" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7878131" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+
+            <div id="f19" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8552354" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8552127" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8551953" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+
+            <div id="f24" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=8059617" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059568" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059540" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059753" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059513" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059697" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8059675" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+
+            <div id="f32" class="tab-pane fade">
+              <iframe src="/iframe.html?width=1200&height=600&id=7875657" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7875636" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7875619" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8968081" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=7875645" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8022493" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+              <iframe src="/iframe.html?width=1200&height=600&id=8227900" frameborder="0" scrolling="no" onload="resizeIframe(this)"></iframe>
+            </div>
+
+
+
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+
+    <script>
+      function resizeIframe(obj) {
+        obj.style.width = obj.contentWindow.document.body.scrollWidth + 'px';
+        obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+      }
+
+      $(document).ready(function(){
+        $(".nav-tabs a").click(function(){
+          $(this).tab('show');
+        });
+        $('.nav-tabs a:first').tab('show');
+      });
+    </script>
+
+  </body>
+</html>
