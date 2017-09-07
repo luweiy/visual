@@ -94,7 +94,8 @@ router.get('/single', function(req, res) {
     for (var i = 0; i < energy.nodes.length; i++) {
       if (energy.nodes[i].node1_id === to_id) {
         //don't count some unneccensary items
-        if (energy.nodes[i].name.match("站房引线|站房电缆头|站房接地刀闸|10kV电缆")) {
+        //if (energy.nodes[i].name.match("站房引线|站房电缆头|站房接地刀闸|10kV电缆")) {
+        if (!energy.nodes[i].name.match("站房母线|变压器")) {
           if (energy.nodes[i].node2_id != '0') {
             callback(from_index, energy.nodes[i].node2_id, callback);
           }
