@@ -52,8 +52,16 @@ request("http://visualenergytech.com:9200/logstash-wanjiang/_search?&size=20000"
 // accessed at GET http://localhost:8080/api
 router.get('/single', function(req, res) {
   var id = req.query.id ? req.query.id : "8979279";
+  var include, exclude = "";
+  if (req.query.exclude !== "null") {
+    exclude = req.query.exclude;
+  } else if (req.query.exclude !== "null") {
+    include = req.query.include;
+  } else {
+    include = "站房母线|变压器";
+  }
   
-  value = myCache.get(id);
+  value = myCache.get(id+"_"+include+"_"+exclude);
   if (value) {
     console.log("load from cache");
     return res.json(value)
@@ -94,8 +102,10 @@ router.get('/single', function(req, res) {
     for (var i = 0; i < energy.nodes.length; i++) {
       if (energy.nodes[i].node1_id === to_id) {
         //don't count some unneccensary items
+        //if (energy.nodes[i].name.match("站房引线|站房电缆头")) {
         //if (energy.nodes[i].name.match("站房引线|站房电缆头|站房接地刀闸|10kV电缆")) {
-        if (!energy.nodes[i].name.match("站房母线|变压器")) {
+        //if (!energy.nodes[i].name.match("站房母线|变压器")) {
+        if (exclude !== "" && energy.nodes[i].name.match(exclude) || include !== "" && !energy.nodes[i].name.match(include)) {
           if (energy.nodes[i].node2_id != '0') {
             callback(from_index, energy.nodes[i].node2_id, callback);
           }
@@ -137,7 +147,7 @@ router.get('/single', function(req, res) {
   cal(0, id, cal);
 
   console.log(JSON.stringify(energy_2));
-  myCache.set(id, energy_2);
+  myCache.set(id+"_"+include+"_"+exclude, energy_2);
 
   res.json(energy_2);
 });
