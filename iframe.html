@@ -74,15 +74,17 @@ d3.json(url, function(error, energy) {
     .data(energy.nodes)
     .enter().append("g");
 
-  node.append("rect")
-      .attr("x", function(d) { return d.x0; })
-      .attr("y", function(d) { return d.y0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("fill", function(d) { 
-        return color(d.type.replace(/ .*/, "")); 
-      })
-      .attr("stroke", "#000");
+  node.append("a")
+      .attr("xlink:href", function(d){return "http://" + window.location.hostname + ":5601/app/kibana#/visualize/edit/d5277a40-a0d2-11e7-a6b7-1f4ac4e98a5f?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:'2014-05-26T02:02:42.913Z',mode:absolute,to:'2014-07-06T02:02:42.913Z'))&_a=(filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:logstash-wanjiang-data,key:MP_ID,negate:!f,type:phrase,value:'51854000'),query:(match:(MP_ID:(query:'51854000',type:phrase))))),linked:!f,query:(query_string:(analyze_wildcard:!t,query:'*')),uiState:(),vis:(aggs:!((enabled:!t,id:'1',params:(field:APhaseA),schema:metric,type:avg),(enabled:!t,id:'2',params:(customInterval:'2h',extended_bounds:(),field:TimeStamp,interval:auto,min_doc_count:1),schema:segment,type:date_histogram),(enabled:!t,id:'3',params:(field:BPhaseA),schema:metric,type:avg),(enabled:!t,id:'4',params:(field:CPhaseA),schema:metric,type:avg)),listeners:(),params:(addLegend:!t,addTimeMarker:!f,addTooltip:!t,categoryAxes:!((id:CategoryAxis-1,labels:(show:!t,truncate:100),position:bottom,scale:(type:linear),show:!t,style:(),title:(text:'TimeStamp+per+12+hours'),type:category)),grid:(categoryLines:!f,style:(color:%23eee)),legendPosition:right,seriesParams:!((data:(id:'1',label:'Average+APhaseA'),drawLinesBetweenPoints:!t,mode:normal,show:true,showCircles:!t,type:line,valueAxis:ValueAxis-1),(data:(id:'3',label:'Average+BPhaseA'),drawLinesBetweenPoints:!t,interpolate:linear,lineWidth:2,mode:normal,show:!t,showCircles:!t,type:line,valueAxis:ValueAxis-1),(data:(id:'4',label:'Average+CPhaseA'),drawLinesBetweenPoints:!t,interpolate:linear,lineWidth:2,mode:normal,show:!t,showCircles:!t,type:line,valueAxis:ValueAxis-1)),times:!(),valueAxes:!((id:ValueAxis-1,labels:(filter:!f,rotate:0,show:!t,truncate:100),name:LeftAxis-1,position:left,scale:(mode:normal,type:linear),show:!t,style:(),title:(text:''),type:value))),title:'Average+A',type:line))";})
+        .append("rect")
+        .attr("x", function(d) { return d.x0; })
+        .attr("y", function(d) { return d.y0; })
+        .attr("height", function(d) { return d.y1 - d.y0; })
+        .attr("width", function(d) { return d.x1 - d.x0; })
+        .attr("fill", function(d) { 
+          return color(d.type.replace(/ .*/, "")); 
+        })
+        .attr("stroke", "#000")
 
   node.append("text")
       .attr("x", function(d) { return d.x0 - 6; })
